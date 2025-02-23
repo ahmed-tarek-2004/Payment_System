@@ -1,4 +1,4 @@
-﻿using Payment_System_Project;
+using Payment_System_Project;
 using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
@@ -90,7 +90,7 @@ public class User
 
             var res = context.Users.Where(b => b.UserId == userID).Select(b => b.Password).SingleOrDefault();
 
-             valid = PasswordHelper.VerifyPassword(pass.Trim(), res);
+            valid = PasswordHelper.VerifyPassword(pass.Trim(), res);
             if (!valid)
             {
                 Console.WriteLine("\n\t\t :: Invalid Password ::\n");
@@ -197,18 +197,66 @@ public class User
             $"\n\t\t Totoal Budget :{user.Budget} \n" +
             $"\n\t\t Payment Method Applyed :- ");
 
-        for (int i = 0; i < user?.methos.Count; i++)
+        if (user.methos.Count > 0)
         {
-            Console.WriteLine($"\n\t\t\t {i + 1}- {methos[i]} .");
+            for (int i = 0; i < user?.methos.Count; i++)
+            {
+                Console.WriteLine($"\n\t\t\t {i + 1}- {methos[i]} .");
+            }
+        }
+        else
+        {
+            Console.WriteLine("\n\t\t :: No Payment Method Applied :: \n");
+            return;
         }
 
-        int userID = user.UserId;
+            int userID = user.UserId;
 
-
-
-        var res = context.Transactions.Where(b => b.UserID == userID).ToList();
-
-        var paymentID = res.Select(b => b.PaymentMethodId).ToList();
+        var res = context.Transactions
+            .Join(
+            context.Users,
+            t => t.UserID,
+            u => u.UserId,
+            (tr, us) => new
+            {
+                tr.Status,
+                tr.Amount,
+                tr.TransactionId,
+                tr.PaymentMethodId,
+                tr.CreatedAt,
+                tr.UserID,
+                us.UserId
+            })
+            .Where(j => j.UserId == userID)
+            .Join(
+            context.paymentMethods,
+            tran => tran.PaymentMethodId,
+            p => p.PaymentMethodId,
+           (tr, pay) => new
+           {
+               tr.Status,
+               tr.Amount,
+               tr.TransactionId,
+               tr.CreatedAt,
+               tr.UserID,
+               pay.Type
+           }
+           ).ToList();
+        if(res.Count==0)
+        {
+            Console.WriteLine("\n\t\t :: NO Transaction Applied :: ");
+            return;
+        }
+        foreach (var trans in res)
+        {
+            Console.WriteLine($"\n\t\t Transaction ID : {trans.TransactionId}\n" +
+                $"\n\t\t Amount : {trans.Amount} \n " +
+                $"\n\t\t Status : {trans.Status} \n" +
+                $"\n\t\t Created At : {trans.CreatedAt}");
+            Console.WriteLine($"\n\t\t Done a Payment By : {trans.Type}");
+            Console.WriteLine("---------------------------------------------------");
+        }
+        /*var paymentID = res.Select(b => b.PaymentMethodId).ToList();
 
         List<string> paymentMethods = new();
 
@@ -240,7 +288,7 @@ public class User
             Console.WriteLine($"\n\t\t Done a Payment By : {paymentMethods[k]}");
             k++;
             Console.WriteLine("---------------------------------------------------");
-        }
+        }*/
 
     }
     private User CheckMail(string User, AppDbContext context, User user)
