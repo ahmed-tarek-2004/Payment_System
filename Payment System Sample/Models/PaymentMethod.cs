@@ -239,19 +239,12 @@ public class PaymentMethod
         string pay = user.methos[choice - 1];
 
         int id = user.UserId;
-        var res = context.paymentMethods.Where(b => b.UserId == id && b.Type == pay).SingleOrDefault();
-        var undo = context.paymentMethods.Where(b => b.UserId == id && b.IsDefault == true).SingleOrDefault();
-        if (res != null)
-        {
-            res.IsDefault = true;
-            if (undo != null)
-            {
-                undo.IsDefault = false;
-            }
-            Console.WriteLine($"\n\t\t :: {pay} Is Set Default Successfully :: \n");
-            context.SaveChanges();
-        }
-        else
+        var undo = context.paymentMethods.Where(b => b.UserId == id && b.IsDefault)
+            .ExecuteUpdate(b=>b.SetProperty(e=>e.IsDefault,false));
+
+        var res=context.paymentMethods.Where(b => b.UserId == id && b.Type == pay)
+           .ExecuteUpdate(b => b.SetProperty(e => e.IsDefault, true));
+        if (res == 0)
         {
             Console.WriteLine($"\n\t\t :: An Error Ocurred :: \n");
         }
