@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Payment_System_Project;
 using System;
@@ -177,9 +177,17 @@ public class PaymentMethod
     public static void DeleteMethos(ref User user, AppDbContext context)
     {
         int userId = user.UserId;
+
+        
         string method;
         do
         {
+           
+           for(int i=0;i<user.methos.Count;i++)
+            {
+                Console.WriteLine($"\n\t\t {i + 1}- {user.methos[i]}.");
+            }
+
             Console.Write("Enter Method Name To Delete : ");
             method = Console.ReadLine();
         } while (method.IsNullOrEmpty());
@@ -189,10 +197,17 @@ public class PaymentMethod
         method = temp.ToString();
         if (user.methos.Contains(method))
         {
-            var res = context.paymentMethods.Where(b => b.UserId == userId && b.Type == method).Single();
-            context.Remove(res);
-            context.SaveChanges();
-            Console.WriteLine($"\n\t\t :: Method {method} Has Deleted Successfully :: ");
+            var res = context.paymentMethods.Where(b => b.UserId == userId && b.Type.Trim().ToLower() == method.Trim().ToLower()).SingleOrDefault();
+            context.paymentMethods.Remove(res);
+            try
+            {
+                context.SaveChanges();
+                Console.WriteLine($"\n\t\t :: Method {method} Has Deleted Successfully :: ");
+            }
+            catch
+            {
+                Console.WriteLine("\n\t\t :: Can't Delete ,Method Have Transaction With It ::\n");
+            }
         }
         else
         {
