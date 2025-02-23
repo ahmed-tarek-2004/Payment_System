@@ -210,7 +210,7 @@ public class User
             return;
         }
 
-            int userID = user.UserId;
+        int userID = user.UserId;
 
         var res = context.Transactions
             .Join(
@@ -242,7 +242,7 @@ public class User
                pay.Type
            }
            ).ToList();
-        if(res.Count==0)
+        if (res.Count == 0)
         {
             Console.WriteLine("\n\t\t :: NO Transaction Applied :: ");
             return;
@@ -293,10 +293,19 @@ public class User
     }
     private User CheckMail(string User, AppDbContext context, User user)
     {
-        var res = context.Users.Where(b => b.Email.ToLower().Trim() == User.ToLower().Trim()).SingleOrDefault();
+        bool isCreated = context.Database.EnsureCreated();
+        if (!isCreated)
+        {
+            var res = context.Users.Where(b => b.Email.ToLower().Trim() == User.ToLower().Trim()).SingleOrDefault();
 
-        if (res != null)
-            return res;
-        else return user;
+            if (res != null)
+                return res;
+            else return user;
+
+        }
+        else
+        {
+            return new User();
+        }
     }
 }
