@@ -26,17 +26,20 @@ public class User
     public String Add_User(AppDbContext context)
     {
 
-        User U = new();
+       User user = new();
 
         do
         {
             Console.Write("Enter Email : ");
-            U.Email = Console.ReadLine();
+            user.Email = Console.ReadLine();
 
-        } while (U.Email.IsNullOrEmpty());
+        } while (user.Email.IsNullOrEmpty());
 
-        if (CheckMail(U.Email, context, U) == U)
+        user.Email = user.Email.Trim();
+
+        try
         {
+            context.Users.Add(user);
             string pass;
             do
             {
@@ -45,15 +48,15 @@ public class User
 
             } while (pass.IsNullOrEmpty());
 
-            U.Password = PasswordHelper.HashPassword(pass);
+            user.Password = PasswordHelper.HashPassword(pass);
 
 
             do
             {
                 Console.Write("Enter User Name : ");
-                U.UserName = Console.ReadLine();
+                user.UserName = Console.ReadLine();
 
-            } while (U.UserName.IsNullOrEmpty());
+            } while (user.UserName.IsNullOrEmpty());
 
 
             int choice = -1;
@@ -65,14 +68,62 @@ public class User
                 //Console.WriteLine(choice);
             } while (choice == -1 || choice == null);
 
-            U.Budget = choice;
+            user.Budget = choice;
 
-            context.Users.Add(U);
+            //context.Users.Add(U);
+           // context.SaveChanges();
+
             context.SaveChanges();
-
-            return $"\n\t\t :: User {U.UserName} Added Successfully ::\n";
+            return $"\n\t\t :: User {user.UserName} Added Successfully ::\n";
         }
-        return "\n\t\t :: User Is Already Exist ::\n";
+        catch
+        {
+            return "\n\t\t :: Email User Is Already Exists , Not Successful Operation ::\n";
+        }
+
+
+        #region old check
+
+        //if (CheckMail(U.Email, context, U))
+        //{
+        //    string pass;
+        //    do
+        //    {
+        //        Console.Write("Enter Password : ");
+        //        pass = Console.ReadLine();
+
+        //    } while (pass.IsNullOrEmpty());
+
+        //    U.Password = PasswordHelper.HashPassword(pass);
+
+
+        //    do
+        //    {
+        //        Console.Write("Enter User Name : ");
+        //        U.UserName = Console.ReadLine();
+
+        //    } while (U.UserName.IsNullOrEmpty());
+
+
+        //    int choice = -1;
+        //    do
+        //    {
+        //        Console.Write("Enter Current Budget in Numeric Input  : ");
+
+        //        int.TryParse(Console.ReadLine(), out choice);
+        //        //Console.WriteLine(choice);
+        //    } while (choice == -1 || choice == null);
+
+        //    U.Budget = choice;
+
+        //    context.Users.Add(U);
+        //    context.SaveChanges();
+
+        //    return $"\n\t\t :: User {U.UserName} Added Successfully ::\n";
+        //}
+        #endregion
+
+
     }
     public void Update_User(ref User user, AppDbContext context)
     {
@@ -154,18 +205,19 @@ public class User
 
         } while (temp.IsNullOrEmpty());
 
-        User tempUser = new();
-        tempUser = user;
-        user = CheckMail(temp, context, tempUser);
-        if (user != tempUser)
+
+        if (context.Users.Any(b => b.Email.Trim() == temp.Trim()))
         {
-            // Console.WriteLine(user.UserName);
+            //int userId = user.UserId;
+            user = context.Users.Where(b => b.Email == temp).SingleOrDefault();
+            //Console.WriteLine(user);
             do
             {
                 Console.Write("Enter Password : ");
                 temp = Console.ReadLine();
             } while (temp.IsNullOrEmpty());
 
+           // Console.WriteLine(temp);
 
             var passTemp = PasswordHelper.VerifyPassword(temp.Trim(), user.Password);
             if (passTemp)
@@ -290,22 +342,5 @@ public class User
             Console.WriteLine("---------------------------------------------------");
         }*/
 
-    }
-    private User CheckMail(string User, AppDbContext context, User user)
-    {
-        bool isCreated = context.Database.EnsureCreated();
-        if (!isCreated)
-        {
-            var res = context.Users.Where(b => b.Email.ToLower().Trim() == User.ToLower().Trim()).SingleOrDefault();
-
-            if (res != null)
-                return res;
-            else return user;
-
-        }
-        else
-        {
-            return new User();
-        }
     }
 }
