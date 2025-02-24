@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
 using Payment_System_Project;
 using System;
 
@@ -36,73 +36,83 @@ public class Transaction
 
 
         int add = (isDefault ? 1 : 0);
-        string defaultType="";
+        string defaultType = "";
         if (isDefault)
         {
-           defaultType = context.paymentMethods.Where(b => b.IsDefault).Select(b => b.Type).SingleOrDefault();
+            defaultType = context.paymentMethods.Where(b => b.IsDefault).Select(b => b.Type).SingleOrDefault();
         }
-        do
+        var trans = context.Database.BeginTransaction();
+        try
         {
-            Console.WriteLine("Chooes Your Payment Method :-");
-            for (int i = 0; i < user.methos.Count; i++)
+            do
             {
-                Console.WriteLine($"\t {i + 1}- {user.methos[i]} .");
+                Console.WriteLine("Chooes Your Payment Method :-");
+                for (int i = 0; i < user.methos.Count; i++)
+                {
+                    Console.WriteLine($"\t {i + 1}- {user.methos[i]} .");
+                }
+
+                if (isDefault)
+                {
+                    Console.WriteLine($"\t {user.methos.Count + 1}- By Default .");
+
+                }
+                Console.Write("Enter Your Choice : ");
+
+                int.TryParse(Console.ReadLine(), out choice);
+            }
+            while (choice < 1 || choice > user.methos.Count + add);
+
+            decimal amount = 0;
+            do
+            {
+                Console.Write("Enter The Amount : ");
+                decimal.TryParse(Console.ReadLine(), out amount);
+            } while (amount < 0 || amount == null);
+
+
+            decimal userAmount = user.Budget;
+            bool enough = true;
+
+            string tempType;
+            if (!isDefault)
+            {
+                tempType = user.methos[choice - 1];
+            }
+            else
+            {
+                tempType = defaultType;
+            }
+            int userId = user.UserId;
+            var res = context.paymentMethods.Where(b => b.UserId == userId && tempType == b.Type).SingleOrDefault();
+            var tranaction = new Transaction()
+            {
+                UserID = user.UserId,
+                PaymentMethodId = res.PaymentMethodId,
+                Amount = amount,
+            };
+
+            if (amount > userAmount)
+            {
+                Console.WriteLine("\n\t\t :: Don't Have Enough Money :: \n");
+                enough = false;
+            }
+            else
+            {
+                user.Budget -= amount;
             }
 
-            if (isDefault)
-            {
-                Console.WriteLine($"\t {user.methos.Count + 1}- By Default .");
+            tranaction.Status = (enough ? "succeeded" : "Failed");
+            context.Transactions.Add(tranaction);
+            context.SaveChanges();
+            if (enough)
+                Console.WriteLine("\n\t\t :: Transaction IS Completed Successflly. :: \n");
 
-            }
-            Console.Write("Enter Your Choice : ");
-
-            int.TryParse(Console.ReadLine(), out choice);
         }
-        while (choice < 1 || choice > user.methos.Count + add);
-
-        decimal amount = 0;
-        do
+        catch(Exception ex)
         {
-            Console.Write("Enter The Amount : ");
-            decimal.TryParse(Console.ReadLine(), out amount);
-        } while (amount < 0 || amount == null);
-
-
-        decimal userAmount = user.Budget;
-        bool enough = true;
-
-        string tempType;
-        if(!isDefault)
-        {
-            tempType= user.methos[choice - 1];
+            Console.WriteLine($"\n\t\t :: Transaction Failed. Error: {ex.Message} :: \n");
+            trans.Rollback();
         }
-        else
-        {
-            tempType = defaultType;
-        }
-        int userId = user.UserId;
-        var res = context.paymentMethods.Where(b => b.UserId == userId && tempType == b.Type).SingleOrDefault();
-        var tranaction = new Transaction()
-        {
-            UserID = user.UserId,
-            PaymentMethodId = res.PaymentMethodId,
-            Amount = amount,
-        };
-
-        if (amount > userAmount)
-        {
-            Console.WriteLine("\n\t\t :: Don't Have Enough Money :: \n");
-            enough = false;
-        }
-        else
-        {
-            user.Budget -= amount;
-        }
-
-        tranaction.Status = (enough ? "succeeded" : "Failed");
-        context.Transactions.Add(tranaction);
-        context.SaveChanges();
-        if (enough)
-            Console.WriteLine("\n\t\t :: Transaction IS Completed Successflly. :: \n");
     }
 }
