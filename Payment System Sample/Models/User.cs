@@ -26,7 +26,7 @@ public class User
     public String Add_User(AppDbContext context)
     {
 
-       User user = new();
+        User user = new();
 
         do
         {
@@ -36,10 +36,9 @@ public class User
         } while (user.Email.IsNullOrEmpty());
 
         user.Email = user.Email.Trim();
-
+        var trans = context.Database.BeginTransaction();
         try
         {
-            context.Users.Add(user);
             string pass;
             do
             {
@@ -68,16 +67,24 @@ public class User
                 //Console.WriteLine(choice);
             } while (choice == -1 || choice == null);
 
-            user.Budget = choice;
+            if (!context.Users.Any(b => b.Email.Trim() == user.Email.Trim()|| b.UserName.Trim()==user.UserName.Trim()))
+            {
+                user.Budget = choice;
+                context.Users.Add(user);
+                context.SaveChanges();
+                trans.Commit();
+                return $"\n\t\t :: User {user.UserName} Added Successfully ::\n";
+            }
+            else
+            {
+                throw new Exception ("Violation");
+            }
 
-            //context.Users.Add(U);
-           // context.SaveChanges();
-
-            context.SaveChanges();
-            return $"\n\t\t :: User {user.UserName} Added Successfully ::\n";
         }
-        catch
+        catch (Exception ex)
         {
+            //Console.WriteLine(ex.Message);
+            trans.Rollback();
             return "\n\t\t :: Email User Is Already Exists , Not Successful Operation ::\n";
         }
 
@@ -122,7 +129,6 @@ public class User
         //    return $"\n\t\t :: User {U.UserName} Added Successfully ::\n";
         //}
         #endregion
-
 
     }
     public void Update_User(ref User user, AppDbContext context)
@@ -219,7 +225,7 @@ public class User
 
             // Console.WriteLine(temp);
             string Upass = user.Password;
-           // Console.WriteLine(Upass??"0");
+            // Console.WriteLine(Upass??"0");
             var passTemp = PasswordHelper.VerifyPassword(temp.Trim(), Upass);
             if (passTemp)
             {
@@ -309,39 +315,41 @@ public class User
             Console.WriteLine($"\n\t\t Done a Payment By : {trans.Type}");
             Console.WriteLine("---------------------------------------------------");
         }
+        #region Checing Relation
         /*var paymentID = res.Select(b => b.PaymentMethodId).ToList();
 
-        List<string> paymentMethods = new();
+       List<string> paymentMethods = new();
 
 
-        for (int i = 0; i < paymentID?.Count; i++)
-        {
-            var method = context.paymentMethods.Where(b => b.UserId == userID && paymentID[i] == b.PaymentMethodId).Select(b => b.Type).ToList();
-            if (method.Count > 0)
-            {
-                if (method.Count == 1)
-                {
-                    paymentMethods.Add(method[0]);
-                }
-                else
-                {
-                    paymentMethods.AddRange(method);
-                }
-            }
-        }
+       for (int i = 0; i < paymentID?.Count; i++)
+       {
+           var method = context.paymentMethods.Where(b => b.UserId == userID && paymentID[i] == b.PaymentMethodId).Select(b => b.Type).ToList();
+           if (method.Count > 0)
+           {
+               if (method.Count == 1)
+               {
+                   paymentMethods.Add(method[0]);
+               }
+               else
+               {
+                   paymentMethods.AddRange(method);
+               }
+           }
+       }
 
 
-        int k = 0;
-        foreach (var trans in res)
-        {
-            Console.WriteLine($"\n\t\t Transaction ID : {trans.TransactionId}\n" +
-                $"\n\t\t Amount : {trans.Amount} \n " +
-                $"\n\t\t Status : {trans.Status} \n" +
-                $"\n\t\t Created At : {trans.CreatedAt}");
-            Console.WriteLine($"\n\t\t Done a Payment By : {paymentMethods[k]}");
-            k++;
-            Console.WriteLine("---------------------------------------------------");
-        }*/
+       int k = 0;
+       foreach (var trans in res)
+       {
+           Console.WriteLine($"\n\t\t Transaction ID : {trans.TransactionId}\n" +
+               $"\n\t\t Amount : {trans.Amount} \n " +
+               $"\n\t\t Status : {trans.Status} \n" +
+               $"\n\t\t Created At : {trans.CreatedAt}");
+           Console.WriteLine($"\n\t\t Done a Payment By : {paymentMethods[k]}");
+           k++;
+           Console.WriteLine("---------------------------------------------------");
+       }*/
+        #endregion
 
     }
 }
