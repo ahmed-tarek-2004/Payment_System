@@ -1,4 +1,4 @@
-﻿using Payment_System_Project;
+using Payment_System_Project;
 using System;
 public class AuditLog
 {
@@ -11,7 +11,7 @@ public class AuditLog
 
     public int UserID { get; set; }
     public DateTime Timestamp { get; set; }
-    public User User { get; set; }
+    public virtual User User { get; set; }
 
 
     public static void addAuditLog(string action , int userId,AppDbContext context)
