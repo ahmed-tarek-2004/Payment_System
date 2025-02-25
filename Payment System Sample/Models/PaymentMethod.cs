@@ -13,8 +13,8 @@ public class PaymentMethod
     public string Type { get; set; }
     public string Details { get; set; }
     public bool IsDefault { get; set; }
-    public User User { get; set; }
-    public List<Transaction> Transactions { get; set; }
+    public virtual User User { get; set; }
+    public virtual List<Transaction> Transactions { get; set; }
 
 
 
