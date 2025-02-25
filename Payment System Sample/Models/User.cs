@@ -19,9 +19,9 @@ public class User
     public DateTime CreatedAt { get; set; }
     public List<string> methos { set; get; } = new();
     //public List<string> methos { set; get; } = new();
-    public List<PaymentMethod> method { get; set; }
-    public List<Transaction> transaction { get; set; }
-    public List<AuditLog> auditLog { get; set; }
+    public virtual List<PaymentMethod> method { get; set; }
+    public virtual List<Transaction> transaction { get; set; }
+    public virtual List<AuditLog> auditLog { get; set; }
 
     public String Add_User(AppDbContext context)
     {
@@ -209,7 +209,7 @@ public class User
         if (context.Users.Any(b => b.Email.Trim() == temp.Trim()))
         {
             //int userId = user.UserId;
-            user = context.Users.Where(b => b.Email == temp).SingleOrDefault();
+            user = context.Users.Where(b => b.Email.Trim() == temp.Trim()).SingleOrDefault();
             //Console.WriteLine(user);
             do
             {
@@ -217,9 +217,10 @@ public class User
                 temp = Console.ReadLine();
             } while (temp.IsNullOrEmpty());
 
-           // Console.WriteLine(temp);
-
-            var passTemp = PasswordHelper.VerifyPassword(temp.Trim(), user.Password);
+            // Console.WriteLine(temp);
+            string Upass = user.Password;
+           // Console.WriteLine(Upass??"0");
+            var passTemp = PasswordHelper.VerifyPassword(temp.Trim(), Upass);
             if (passTemp)
             {
                 Console.WriteLine($"\n\t\t :: Welcome Back {user.UserName}::\n");
