@@ -10,8 +10,8 @@ public class Transaction
     public decimal Amount { get; set; }
     public string Status { get; set; }
     public DateTime CreatedAt { get; set; }
-    public PaymentMethod PaymentMethod { get; set; }
-    public User User { get; set; }
+    public virtual PaymentMethod PaymentMethod { get; set; }
+    public virtual User User { get; set; }
 
     public void AddTransaction(ref User user, AppDbContext context)
     {
