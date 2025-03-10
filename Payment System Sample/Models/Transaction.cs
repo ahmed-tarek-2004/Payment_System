@@ -107,6 +107,7 @@ public class Transaction
             context.SaveChanges();
             if (enough)
                 Console.WriteLine("\n\t\t :: Transaction IS Completed Successflly. :: \n");
+            trans.Commit();
 
         }
         catch(Exception ex)
